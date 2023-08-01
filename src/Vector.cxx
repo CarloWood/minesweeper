@@ -2,12 +2,6 @@
 #include "Vector.h"
 #include "BoolVector.h"
 
-constexpr Vector::Vector(char const* name, int value) : VectorTmpl<Cols, Rows, Bits>(name)
-{
-  for (int i = 0; i < cols * rows; ++i)
-    set_value(i, value);
-}
-
 namespace {
 
 template<int bits>

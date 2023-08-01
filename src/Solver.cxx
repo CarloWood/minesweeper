@@ -22,9 +22,13 @@ void Solver::print_on(std::ostream& os) const
 void Solver::click_empty(BoolVector clicked)
 {
   DoutEntering(dc::notice, "Solver::click_empty(" << clicked << ")");
+  // Do not click on a square that is already known to be empty (that was clicked before).
+  ASSERT((known_empty_ & clicked).is_empty());
+  // Do not click on a mine.
+  ASSERT((grid_->mines() & clicked).is_empty());
   known_empty_ |= clicked;
-  Vector known_empty = known_empty_.to_mask();
-  known_borders_ |= grid_->borders() & known_empty;
+  Vector known_empty_mask = known_empty_.to_mask();
+  known_borders_ &= grid_->borders() | ~known_empty_mask;
 }
 
 void Solver::click_empty(int index)
@@ -37,6 +41,10 @@ void Solver::click_empty(int index)
 void Solver::click_mines(BoolVector clicked)
 {
   DoutEntering(dc::notice, "Solver::click_mines(" << clicked << ")");
+  // Do not click on a mine that was flagged before (that was clicked before).
+  ASSERT((known_mines_ & clicked).is_empty());
+  // Only flag squares as mine that are really mines.
+  ASSERT((grid_->mines() & clicked) == clicked);
   known_mines_ |= clicked;
 }
 
@@ -49,26 +57,51 @@ void Solver::click_mines(int index)
 
 BoolVector Solver::calc_new_empty() const
 {
+  DoutEntering(dc::notice, "Solver::calc_new_empty()");
+  Dout(dc::notice, "known_borders_ = " << known_borders_);
+  Dout(dc::notice, "known_mines_ = " << known_mines_);
+  Dout(dc::notice, "known_mines_.explode() = " << known_mines_.explode());
   Vector mines_needed = known_borders_ - known_mines_.explode();
+  Dout(dc::notice, "mines_needed = known_borders_ - known_mines_.explode() = " << mines_needed);
   BoolVector has_all = mines_needed.equals(0);
+  Dout(dc::notice, "has_all = mines_needed.equals(0) = " << has_all);
   has_all &= known_empty_;
-  BoolVector clear = known_empty_;
-  clear |= known_mines_;
-  clear |= edge;
+  Dout(dc::notice, "has_all = has_all & known_empty_ = " << has_all);
+  Dout(dc::notice, "edge = " << edge);
+  BoolVector clear = known_empty_ || known_mines_ || edge;
+  Dout(dc::notice, "clear = " << clear);
+  Dout(dc::notice, "has_all.explode() = " << has_all.explode());
+  Dout(dc::notice, "has_all.explode().equals(0) = " << has_all.explode().equals(0));
+  Dout(dc::notice, "!has_all.explode().equals(0) = " << !has_all.explode().equals(0));
+  Dout(dc::notice, "(!has_all.explode().equals(0)).clear(clear) = " << ((!has_all.explode().equals(0)).clear(clear)));
   return (!has_all.explode().equals(0)).clear(clear);
 }
 
 BoolVector Solver::calc_new_mines() const
 {
   DoutEntering(dc::notice, "Solver::calc_new_mines()");
-  BoolVector known("known", known_empty_);
-  known |= known_mines_;
-  BoolVector unknown("unknown", !known);
-  Vector borders_unknown("borders unknown", unknown.explode());
-  Vector mines_needed = ("mines_needed", known_borders_ - known_mines_.explode());
-  std::cout << mines_needed << std::endl;
+  Dout(dc::notice, "known_empty_ = " << known_empty_);
+  Dout(dc::notice, "known_mines_ = " << known_mines_);
+  BoolVector known("known", known_empty_ || known_mines_);
+  Dout(dc::notice, "known = known_empty_ || known_mines_ = " << known);
+  Dout(dc::notice, "!known = " << !known);
+  Vector borders_unknown("borders unknown", (!known).explode());
+  Dout(dc::notice, "borders_unknown = (!known).explode() = " << borders_unknown);
+  Dout(dc::notice, "known_mines_.explode() = " << known_mines_.explode());
+  Vector mines_needed = (known_borders_ - known_mines_.explode()) & known_empty_.to_mask();
+  Dout(dc::notice, "mines_needed = known_borders_ - known_mines_.explode() = " << mines_needed);
   BoolVector needs_all = (borders_unknown - mines_needed).equals(0);
-  BoolVector clear(known);
-  clear |= edge;
-  return (!needs_all.explode().equals(0)).clear(clear);
+  Dout(dc::notice, "needs_all = (borders_unknown - mines_needed).equals(0) = " << needs_all);
+  Dout(dc::notice, "needs_all.explode() = " << needs_all.explode());
+  Dout(dc::notice, "needs_all.explode().equals(0) = " << needs_all.explode().equals(0));
+  Dout(dc::notice, "!needs_all.explode().equals(0) = " << !needs_all.explode().equals(0));
+  Dout(dc::notice, "(!needs_all.explode().equals(0)).clear(known || edge) = " << (!needs_all.explode().equals(0)).clear(known || edge));
+  return (!needs_all.explode().equals(0)).clear(known || edge);
+}
+
+bool Solver::solved() const
+{
+  Vector inner = generate_inner<Vector::bits>();
+  inner &= ~(known_empty_ | known_mines_);
+  return inner.is_empty();
 }

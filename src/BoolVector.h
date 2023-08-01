@@ -26,7 +26,7 @@ class BoolVector : public Vector
     return inverse;
   }
 
-  inline BoolVector operator!() const;
+  constexpr BoolVector operator!() const;
 
   int first_true() const
   {
@@ -37,6 +37,14 @@ class BoolVector : public Vector
         return bit_index / bits;
       }
     return -1;
+  }
+
+  BoolVector operator||(BoolVector const& rhs) const
+  {
+    BoolVector result(*this);
+    for (int i = 0; i < data_.size(); ++i)
+      result.data_[i] |= rhs.data_[i];
+    return result;
   }
 
   BoolVector& clear(BoolVector const& other)
@@ -96,11 +104,11 @@ class BoolVector : public Vector
 template<int bits>
 consteval BoolVector generate_inner()
 {
-  BoolVector edge;
+  BoolVector inner;
   for (int col = 1; col < Vector::cols - 1; ++col)
     for (int row = 1; row < Vector::rows - 1; ++row)
-      edge.set_value(Vector::index(col, row), 1);
-  return edge;
+      inner.set_value(Vector::index(col, row), 1);
+  return inner;
 }
 
 template<int bits>
@@ -115,11 +123,12 @@ consteval BoolVector generate_ones()
 
 static constexpr Vector zero;
 static constexpr BoolVector boolean_mask = generate_ones<Vector::bits>();
-static constexpr BoolVector edge = ~generate_inner<Vector::bits>();
 
-BoolVector BoolVector::operator!() const
+constexpr BoolVector BoolVector::operator!() const
 {
   BoolVector inverted(boolean_mask);
   inverted -= *this;
   return inverted;
 }
+
+static constexpr BoolVector edge = !generate_inner<Vector::bits>();

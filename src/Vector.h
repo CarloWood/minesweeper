@@ -2,7 +2,7 @@
 
 #include "VectorTmpl.h"
 
-static constexpr int Cols = 5;         // Number of colums of the mine field.
+static constexpr int Cols = 6;         // Number of colums of the mine field.
 static constexpr int Rows = 6;         // Number of rows of the mine field.
 static constexpr int Bits = 4;         // Number of bits per vector element which corresponds to one square in the mine field.
 
@@ -11,9 +11,13 @@ class BoolVector;
 class Vector : public VectorTmpl<Cols, Rows, Bits>
 {
  public:
-  Vector() : VectorTmpl<Cols, Rows, Bits>("-") { }
-  Vector(char const* name) : VectorTmpl<Cols, Rows, Bits>(name) { }
-  Vector(char const* name, int value);
+  constexpr Vector() : VectorTmpl<Cols, Rows, Bits>("D") { }
+  constexpr Vector(char const* name) : VectorTmpl<Cols, Rows, Bits>(name) { }
+  constexpr Vector(char const* name, int value);
+  constexpr Vector(Vector const& other) : VectorTmpl<Cols, Rows, Bits>(other) { }
+  constexpr Vector(char const* name, Vector const& other) : VectorTmpl<Cols, Rows, Bits>(name, other) { }
+
+  using VectorTmpl<Cols, Rows, Bits>::operator=;
 
  public:
   Vector& operator&=(Vector const& other)
@@ -23,7 +27,7 @@ class Vector : public VectorTmpl<Cols, Rows, Bits>
     return *this;
   }
 
-  Vector operator&(Vector const& rhs)
+  Vector operator&(Vector const& rhs) const
   {
     Vector result(*this);
     return result &= rhs;
@@ -36,7 +40,7 @@ class Vector : public VectorTmpl<Cols, Rows, Bits>
     return *this;
   }
 
-  Vector operator|(Vector const& rhs)
+  Vector operator|(Vector const& rhs) const
   {
     Vector result(*this);
     return result |= rhs;
@@ -49,17 +53,10 @@ class Vector : public VectorTmpl<Cols, Rows, Bits>
     return *this;
   }
 
-  Vector operator^(Vector const& rhs)
+  Vector operator^(Vector const& rhs) const
   {
     Vector result(*this);
     return result ^= rhs;
-  }
-
-  Vector& clear(Vector const& other)
-  {
-    for (int i = 0; i < data_.size(); ++i)
-      data_[i] &= ~other.data_[i];
-    return *this;
   }
 
   Vector& operator+=(Vector const& rhs)
@@ -76,7 +73,7 @@ class Vector : public VectorTmpl<Cols, Rows, Bits>
     return *this;
   }
 
-  Vector operator-(Vector const& rhs)
+  Vector operator-(Vector const& rhs) const
   {
     Vector result(*this);
     return result -= rhs;
@@ -117,4 +114,13 @@ class Vector : public VectorTmpl<Cols, Rows, Bits>
   }
 
   BoolVector equals(Vector const& value) const;
+
+ protected:
+  Vector to_mask() const
+  {
+    Vector result(*this);
+    for (int i = 0; i < data_.size(); ++i)
+      result.data_[i] *= value_mask;
+    return result;
+  }
 };

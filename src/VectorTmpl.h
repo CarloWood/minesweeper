@@ -56,24 +56,32 @@ class VectorTmpl
   static constexpr int N = (total_bits + 63) / 64;
 
   static utils::RandomNumber s_random_number;
-  static int index(int col, int row) { return col + cols * row; }
+  static constexpr int index(int col, int row) { return col + cols * row; }
 
  protected:
   char const* name_;
   std::array<uint64_t, N> data_;
 
  public:
-  VectorTmpl(char const* name) : name_(name), data_{0} { }
+  constexpr VectorTmpl(char const* name) : name_(name), data_{0} { }
+  constexpr VectorTmpl(VectorTmpl const& other) : name_(other.name_), data_(other.data_) { }
+  constexpr VectorTmpl(char const* name, VectorTmpl const& other) : name_(name), data_(other.data_) { }
+
+  VectorTmpl& operator=(VectorTmpl const& rhs)
+  {
+    data_ = rhs.data_;
+    return *this;
+  }
 
   VectorTmpl& operator&=(VectorTmpl const& other);
 
   int get_value(int index) const;
-  void set_value(int index, int value);
+  constexpr void set_value(int index, int value);
 
   void print_row_on(std::ostream& os, int row) const;
   void print_on(std::ostream& os) const;
 
-  void randomize();
+  void randomize(utils::RandomNumber& random_number);
 };
 
 template<int cols, int rows, int bits>
@@ -97,6 +105,18 @@ void VectorTmpl<cols, rows, bits>::print_row_on(std::ostream& os, int row) const
 
   for (int col = 0; col < cols; ++col)
   {
+    bool top_or_bottom_row = row == 0 || row == rows - 1;
+    bool left_or_right_col = col == 0 || col == cols - 1;
+    if (top_or_bottom_row)
+    {
+      if (col == 0)
+        os << "\e[38;5;8m";
+    }
+    else if (col == 0 || col == cols - 1)
+      os << "\e[38;5;8m";
+    else if (col == 1)
+      os << "\e[0m";
+
     int i = index(col, row);
     int v = get_value(i);
     ASSERT(0 <= v && v < 16);
@@ -105,6 +125,7 @@ void VectorTmpl<cols, rows, bits>::print_row_on(std::ostream& os, int row) const
     else
       os << ' ' << (char)('A' + v - 10);
   }
+  os << "\e[0m";
 }
 
 template<int cols, int rows, int bits>
@@ -116,7 +137,7 @@ int VectorTmpl<cols, rows, bits>::get_value(int value_index) const
 }
 
 template<int cols, int rows, int bits>
-void VectorTmpl<cols, rows, bits>::set_value(int value_index, int value)
+constexpr void VectorTmpl<cols, rows, bits>::set_value(int value_index, int value)
 {
   int array_index = value_index / values_per_word;
   int bit_shift = (value_index % values_per_word) * bits;
@@ -125,11 +146,11 @@ void VectorTmpl<cols, rows, bits>::set_value(int value_index, int value)
 }
 
 template<int cols, int rows, int bits>
-void VectorTmpl<cols, rows, bits>::randomize()
+void VectorTmpl<cols, rows, bits>::randomize(utils::RandomNumber& random_number)
 {
   std::uniform_int_distribution<uint64_t> dist64(std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max());
   for (int i = 0; i < N; ++i)
-    data_[i] = s_random_number.generate(dist64);
+    data_[i] = random_number.generate(dist64);
 }
 
 //static

@@ -1,4 +1,4 @@
 include(AICxxProject)
 
-add_executable(solver solver.cxx Grid.cxx Vector.cxx BoolVector.cxx)
+add_executable(solver solver.cxx Grid.cxx Vector.cxx BoolVector.cxx Solver.cxx)
 target_link_libraries(solver PRIVATE ${AICXX_OBJECTS_LIST})

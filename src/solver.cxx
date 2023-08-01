@@ -10,6 +10,7 @@ int main()
   utils::RandomNumber rn;//(0x601ded9789afa);
   Grid grid(rn);
 
+  unsigned long attempt = 0;
   for (;;)
   {
     BoolVector possible_first_moves("first moves");
@@ -20,6 +21,7 @@ int main()
         break;
       grid.randomize(rn);
     }
+    ++attempt;
     int index = possible_first_moves.first_true();
     std::vector<int> possible_moves;
     while (index != -1)
@@ -28,15 +30,15 @@ int main()
       index = possible_first_moves.next_true(index);
     }
 
-    std::cout << grid << std::endl;
-    std::cout << possible_first_moves << std::endl;
+    //std::cout << grid << std::endl;
+    //std::cout << possible_first_moves << std::endl;
 
     bool solved = true;
     for (int move : possible_moves)
     {
       Solver solver(&grid);
       solver.click_empty(move);
-      std::cout << solver << std::endl;
+      //std::cout << solver << std::endl;
       int moves;
       do
       {
@@ -47,7 +49,7 @@ int main()
           if (new_empty.is_empty())
             break;
           solver.click_empty(new_empty);
-          std::cout << solver << std::endl;
+          //std::cout << solver << std::endl;
           ++moves;
         }
         while (1);
@@ -57,7 +59,7 @@ int main()
           if (new_mines.is_empty())
             break;
           solver.click_mines(new_mines);
-          std::cout << solver << std::endl;
+          //std::cout << solver << std::endl;
           ++moves;
         }
         while (1);
@@ -66,14 +68,16 @@ int main()
 
       if (!solver.solved())
       {
-        std::cout << "Could not entirely solve: " << solver << std::endl;
+        //std::cout << "Could not entirely solve: " << solver << "\nattempt " << attempt << std::endl;
+        if (attempt % 1000000 == 0)
+          std::cout << "attempt=" << attempt << '\n';
         solved = false;
         break;
       }
     }
     if (solved)
     {
-      std::cout << "Could solve this field without any guessing!" << std::endl;
+      std::cout << "Could solve this grid without any guessing:" << grid << std::endl;
       break;
     }
     grid.randomize(rn);

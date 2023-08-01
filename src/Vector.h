@@ -2,8 +2,8 @@
 
 #include "VectorTmpl.h"
 
-static constexpr int Cols = 14;         // Number of colums of the mine field.
-static constexpr int Rows = 14;         // Number of rows of the mine field.
+static constexpr int Cols = 6;         // Number of colums of the mine field.
+static constexpr int Rows = 7;         // Number of rows of the mine field.
 static constexpr int Bits = 4;         // Number of bits per vector element which corresponds to one square in the mine field.
 
 class BoolVector;

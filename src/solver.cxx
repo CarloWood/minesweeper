@@ -7,8 +7,10 @@ int main()
   Debug(NAMESPACE_DEBUG::init());
   Dout(dc::notice, "Entering main()");
 
-  utils::RandomNumber rn;//(0x601ded9789afa);
+  utils::RandomNumber rn; //(0x601f23983f24a);
   Grid grid(rn);
+
+  Vector::print_consts();
 
   unsigned long attempt = 0;
   for (;;)
@@ -21,11 +23,13 @@ int main()
         break;
       grid.randomize(rn);
     }
+    Dout(dc::debug, "possible_first_moves = " << possible_first_moves);
     ++attempt;
     int index = possible_first_moves.first_true();
     std::vector<int> possible_moves;
     while (index != -1)
     {
+      Dout(dc::debug, "Adding " << index);
       possible_moves.push_back(index);
       index = possible_first_moves.next_true(index);
     }
@@ -34,6 +38,7 @@ int main()
     //std::cout << possible_first_moves << std::endl;
 
     bool solved = true;
+    Dout(dc::debug, "Number of possible moves: " << possible_moves.size());
     for (int move : possible_moves)
     {
       Solver solver(&grid);
@@ -69,9 +74,10 @@ int main()
       if (!solver.solved())
       {
         //std::cout << "Could not entirely solve: " << solver << "\nattempt " << attempt << std::endl;
-        if (attempt % 1000000 == 0)
+//        if (attempt % 1000000 == 0)
           std::cout << "attempt=" << attempt << '\n';
         solved = false;
+        //std::cout << solver << '\n';
         break;
       }
     }

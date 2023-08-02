@@ -86,6 +86,7 @@ class BoolVector : public Vector
 
   bool is_empty() const
   {
+    ASSERT((data_[N - 1] & ~excess_mask_inverse) == 0);
     for (int i = 0; i < data_.size(); ++i)
       if (data_[i])
         return false;

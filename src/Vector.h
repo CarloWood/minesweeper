@@ -2,8 +2,8 @@
 
 #include "VectorTmpl.h"
 
-static constexpr int Cols = 6;         // Number of colums of the mine field.
-static constexpr int Rows = 7;         // Number of rows of the mine field.
+static constexpr int Cols = 7;         // Number of colums of the mine field.
+static constexpr int Rows = 6;         // Number of rows of the mine field.
 static constexpr int Bits = 4;         // Number of bits per vector element which corresponds to one square in the mine field.
 
 class BoolVector;
@@ -125,6 +125,7 @@ class Vector : public VectorTmpl<Cols, Rows, Bits>
 
   bool is_empty() const
   {
+    ASSERT((data_[N - 1] & ~excess_mask_inverse) == 0);
     for (int i = 0; i < data_.size(); ++i)
       if (data_[i])
         return false;
@@ -153,4 +154,5 @@ constexpr Vector::Vector(char const* name, int value) : VectorTmpl<Cols, Rows, B
 {
   for (int i = 0; i < cols * rows; ++i)
     set_value(i, value);
+  clear_excess_bits();
 }

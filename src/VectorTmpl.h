@@ -54,6 +54,10 @@ class VectorTmpl
   static constexpr int values_per_word = 64 / bits;
   static constexpr int total_bits = cols * rows * bits;
   static constexpr int N = (total_bits + 63) / 64;
+  static constexpr int array_bits = N * 64;
+  static constexpr int excess_bits = array_bits - total_bits;
+  static constexpr uint64_t excess_mask_inverse = ~uint64_t{0} >> excess_bits;
+  constexpr void clear_excess_bits() { data_[N - 1] &= excess_mask_inverse; }
 
   static utils::RandomNumber s_random_number;
   static constexpr int index(int col, int row) { return col + cols * row; }
@@ -66,6 +70,13 @@ class VectorTmpl
   constexpr VectorTmpl(char const* name) : name_(name), data_{0} { }
   constexpr VectorTmpl(VectorTmpl const& other) : name_(other.name_), data_(other.data_) { }
   constexpr VectorTmpl(char const* name, VectorTmpl const& other) : name_(name), data_(other.data_) { }
+
+  static void print_consts()
+  {
+    Dout(dc::notice, "value_mask = " << std::hex << value_mask <<
+        "; values_per_word = " << values_per_word << "; total_bits = " << total_bits <<
+        "; excess_bits = " << excess_bits << "; excess_mask_inverse = " << excess_mask_inverse);
+  }
 
   VectorTmpl& operator=(VectorTmpl const& rhs)
   {
@@ -126,6 +137,8 @@ void VectorTmpl<cols, rows, bits>::print_row_on(std::ostream& os, int row) const
       os << ' ' << (char)('A' + v - 10);
   }
   os << "\e[0m";
+
+  ASSERT(row < rows - 1 || (data_[N - 1] & ~excess_mask_inverse) == 0);
 }
 
 template<int cols, int rows, int bits>

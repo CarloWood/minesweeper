@@ -66,6 +66,7 @@ BoolVector Vector::equals(Vector const& value) const
 
   for (int i = 0; i < data_.size(); ++i)
     result.data_[i] = equal_zero<bits>(tmp.data_[i]);
+  result.data_[N - 1] &= excess_mask_inverse;
 
   return result;
 }

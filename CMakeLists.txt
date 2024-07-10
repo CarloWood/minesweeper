@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14...3.26)
+cmake_minimum_required(VERSION 3.14...3.30)
 
 project(minesweeper
         LANGUAGES CXX

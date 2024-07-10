@@ -74,7 +74,7 @@ int main()
       if (!solver.solved())
       {
         //std::cout << "Could not entirely solve: " << solver << "\nattempt " << attempt << std::endl;
-//        if (attempt % 1000000 == 0)
+        if (attempt % 1000 == 0)
           std::cout << "attempt=" << attempt << '\n';
         solved = false;
         //std::cout << solver << '\n';
